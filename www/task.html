@@ -1,0 +1,105 @@
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+	<title>Mobile Collecting</title>
+    
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/ionicons.min.css" />
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/typography.css">
+	<link rel="stylesheet" href="css/default-css.css">
+
+ 	<script type="text/javascript" charset="utf-8" src="js/jquery.min"></script>
+	<script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/cordova-1.9.0.js"></script>
+  	<script type="text/javascript" charset="utf-8">
+	//Connection
+	var URLServer = 'http://hilal.site'
+	//var URLServer = 'http://localhost:2531'
+	var username = localStorage.username;
+	$(document).ready(function(){
+		$.ajax({
+			//url 	: 'http://192.168.8.100/amber/services/task.php',
+			url 	: URLServer+'/api/tasks/GetTasksByUsername',
+			data    : 'username='+username,
+			type    : 'GET',
+			dataType: 'json',
+			timeout: 5000,
+			success: function(data, status)
+			{
+				$.each(data, function(i,item)
+				{ 
+					noakad = item["Id"];
+					alamat = item["Debt"]["Address"];
+					status = item["IsVisited"];
+					jatuh_tempo = item["DueDate"];
+					if(status==false)
+					{
+						kunjungan = "<input hidden value="+jatuh_tempo+" id=jatuh_tempo"+i+"><button class='btn btn-default' value="+noakad+" id=noakad"+i+" onclick='kunjungi("+i+")'>GO <span class='glyphicon glyphicon-log-in'></span> ";
+						$("#data").append("<tr class='danger'><td>"+ noakad + "</td><td>" + alamat + "</td><td><center>"+ kunjungan  +"</center></td></tr>");
+					} else
+					{
+						kunjungan = "<button class='btn btn-success' value="+noakad+" id=noakad onclick='notif()'>OK <span class='glyphicon glyphicon-ok'></span> ";
+						$("#data").append("<tr class='success'><td>"+ noakad + "</td><td>" + alamat + "</td><td><center>"+ kunjungan  +"</center></td></tr>");
+					}				
+				});
+					$("#data");
+				},
+				error: function(){
+					alert('Error terjadi');
+					}
+		});
+	});  
+
+	function notif()
+	{
+		alert('No AKAD Ini Sudah Dikunjungi');
+	}
+
+	function kunjungi(i)
+  	{
+    //Arahkan ke halaman tagihan.html
+       var akad = $('#noakad'+i+'').val();
+       var tempo = $('#jatuh_tempo'+i+'').val();
+       localStorage.setItem('akad',akad);
+       localStorage.setItem('tempo',tempo);
+       window.location.href = "tagihan.html";
+    };
+
+    function logout()
+    {
+    	localStorage.clear();
+    }
+    </script>
+</head>
+<body class="all">
+	<div class="container">
+		<h3 class="text-center" style="color:#007bff; padding:10px;"><strong><span class='glyphicon glyphicon-list-alt'></span>AO DAILY TASK</strong></h3>
+		<div class="card-body" style="background-color: #fffff7; margin: 0px 10px 0px; padding: inherit;">
+			<div class="panel panel-default">
+				<div class="dataTable_wrapper">
+					<table class="table table-center table-bordered table-hover">
+						<thead class="text-uppercase bg-primary">
+							<tr>
+								<th class="text-center"><span class='glyphicon glyphicon-file'></span>Id</th>
+								<th class="text-center"><span class='glyphicon glyphicon-road'></span>Alamat</th>
+								<th class="text-center"><span class='glyphicon glyphicon-edit'></span>Action</th>
+							</tr>
+						</thead>
+						<tbody id="data">
+						</tbody>
+					</table>
+				</div>
+		  	</div>
+		</div>
+	</div>
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+		<div class="navbar-text">
+            <a href="index.html" onclick="logout()">
+				<center><span class="glyphicon glyphicon-off">Logout</span></center>
+			</a>
+        </div>
+    </nav>
+</body>
+</html>

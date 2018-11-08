@@ -1,0 +1,276 @@
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+	<title>Mobile Collecting</title>
+    
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/ionicons.min.css" />
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/typography.css">
+	<link rel="stylesheet" href="css/default-css.css">
+ 	<link rel="stylesheet" href="lib/datepicker/dist/css/bootstrap-datepicker.min.css" />
+
+ 	<script type="text/javascript" charset="utf-8" src="js/jquery.min"></script>
+ 	<script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
+  	<script type="text/javascript" charset="utf-8">
+	//Connection
+	var URLServer = 'http://hilal.site'
+	//var URLServer = 'http://localhost:2531'
+	var noakad = localStorage.akad;
+	var tempo = localStorage.tempo;
+
+	document.addEventListener("deviceready", onDeviceReady, false);
+
+    // device APIs are available
+    //
+    function onDeviceReady() {
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+    }
+
+    // onSuccess Geolocation
+    //
+    function onSuccess(pos) {
+        localStorage.setItem('lat',pos.coords.latitude); 
+        localStorage.setItem('lng',pos.coords.longitude);
+    }
+     // onError Callback receives a PositionError object
+     //
+    function onError(error) {
+		console.log("Error getting geolocation: code=" + error.code + " message=" + error.message);
+    }
+
+	function tidakbertemu()
+	{		
+	  	var lat = localStorage.lat;
+	  	var lng = localStorage.lng;
+	    //Mengambil value dari alasan
+	    var alasan = $('#alasan').val();
+		alert("id="+noakad
+				+"\r\nAlasan"+alasan
+				+"\r\nLat"+lat
+				+"\r\nLng"+lng
+			 );
+	    //Gunakan jquery AJAX
+	    $.ajax({
+	        //url     : 'http://192.168.8.100/amber/services/tidakbertemu.php',
+	        url     : URLServer+'/api/bills/VisitingResult',
+	        //mengirimkan username,noakad,tempo ke script tidakbertemu.php
+	        data    : 
+				{ 
+					Id : noakad,
+					IsSuccess : false,
+					IsDebtorFound : false,
+					Reason : alasan,
+					AmountPaid : null,
+					PromisedDate : null,
+					GeoLat : 0,
+					GeoLng : 0
+				},
+	        //Method pengiriman
+	        type    : 'POST',
+	        //Data yang akan diambil dari script pemroses
+	        dataType: 'html',
+	        //Respon jika data berhasil dikirim
+	        success : function(data){
+					alert(data);
+					if(data='success'){
+						//hapus akad dan tempo pada localstorage lalu arahkan ke task.html
+						localStorage.removeItem('akad');
+						localStorage.removeItem('tempo');
+						localStorage.removeItem('lat');
+						localStorage.removeItem('lng');
+						alert('Berhasil');
+						window.location.href="task.html";
+					}
+					else{
+						//Cetak peringatan lalu arahkan kembali ke tidakbertemu.html
+						alert("gagal");
+						window.location.href = "tidakbertemu.html";
+					}
+				},
+			error: function()
+			{
+				alert('Error terjadi');
+			}	
+		});
+	}
+	  
+	function uploadPhoto() {
+		var dt = new Date();
+		var year = dt.getFullYear();
+		var month = ((dt.getMonth() + 1) < 10 ? '0' : '') + (dt.getMonth() + 1);
+		var date = (dt.getDate() < 10 ? '0' : '') + dt.getDate();
+		var tanggal = year+'-'+month+'-'+date;
+		var imageURI = localStorage.url;
+		var options = new FileUploadOptions();
+        options.fileKey="file";
+        options.fileName= noakad+'_'+tanggal+'.jpg';
+        options.mimeType="image/jpeg";
+ 
+        var params = new Object();
+        params.value1 = "test";
+        params.value2 = "param";
+ 
+        options.params = params;
+        options.chunkedMode = false;
+ 
+        var ft = new FileTransfer();
+        //ft.upload(imageURI, "http://192.168.8.100/amber/services/upload.php", win, fail, options);
+        ft.upload(imageURI, "http://localhost:2531/api/upload/PostUserImage", win, fail, options);
+
+    }
+        
+	function win(r) {
+        console.log("Code = " + r.responseCode);
+        console.log("Response = " + r.response);
+        console.log("Sent = " + r.bytesSent);
+    }
+
+    function fail(error) {
+        alert("An error has occurred: Code = " + error.code);
+        console.log("upload error source " + error.source);
+        console.log("upload error target " + error.target);
+    }
+        
+        
+    function submit()
+    {
+    	//uploadPhoto();
+    	tidakbertemu();
+    	//localStorage.removeItem('latDebitur');
+    	//localStorage.removeItem('lngDebitur');
+	}
+
+	function cancel()
+	{
+		window.location.href = "tagihan.html";
+	}
+	
+	//---------------------------------
+	var pictureSource;   // picture source
+    var destinationType; // sets the format of returned value
+
+    // Wait for device API libraries to load
+    //
+    document.addEventListener("deviceready",onDeviceReady,false);
+
+    // device APIs are available
+    //
+    function onDeviceReady() {
+        pictureSource=navigator.camera.PictureSourceType;
+        destinationType=navigator.camera.DestinationType;
+    }
+
+    // Called when a photo is successfully retrieved
+    //
+    function onPhotoDataSuccess(imageData) {
+      // Uncomment to view the base64-encoded image data
+      // console.log(imageData);
+
+      // Get image handle
+      //
+      var smallImage = document.getElementById('smallImage');
+
+      // Unhide image elements
+      //
+      smallImage.style.display = 'block';
+
+      // Show the captured photo
+      // The in-line CSS rules are used to resize the image
+      //
+      smallImage.src = "data:image/jpeg;base64," + imageData;
+
+      document.getElementById("smallImage").innerHTML = imageData;
+    }
+
+    // Called when a photo is successfully retrieved
+    //
+    function onPhotoURISuccess(imageURI) {
+      // Uncomment to view the image file URI
+      // console.log(imageURI);
+
+      // Get image handle
+      //
+      var largeImage = document.getElementById('smallImage');
+
+      // Unhide image elements
+      //
+      largeImage.style.display = 'block';
+
+      // Show the captured photo
+      // The in-line CSS rules are used to resize the image
+      //
+      largeImage.src = imageURI;
+    }
+
+    // A button will call this function
+    //
+    function capturePhoto() {
+      // Take picture using device camera and retrieve image as base64-encoded string
+      navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+        destinationType: destinationType.FILE_URI,
+		saveToPhotoAlbum : true,
+		});
+    }
+
+    // A button will call this function
+    //
+    function capturePhotoEdit() {
+      // Take picture using device camera, allow edit, and retrieve image as base64-encoded string
+      navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 20, allowEdit: true,
+        destinationType: destinationType.FILE_URI,
+		saveToPhotoAlbum : true,
+		});
+    }
+
+    // A button will call this function
+    //
+    function getPhoto(source) {
+      // Retrieve image file location from specified source
+      navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+        destinationType: destinationType.FILE_URI,
+        sourceType: source });
+    }
+
+    // Called if something bad happens.
+    //
+    function onFail(message) {
+      alert('Failed because: ' + message);
+    }
+	</script>
+</head>
+<body class="all">
+	<div class="container">	
+		<h3 class="text-center" style="color:#007bff; padding:10px;"><strong><span class='glyphicon glyphicon-exclamation-sign'></span>TIDAK BERTEMU</strong></h3>
+		<div class="card-body">
+			<div class="panel panel-default">
+				<div class="panel panel-footer">
+					<p>ALASAN :</p>
+					<textarea class="form-control" rows="6" id="alasan"></textarea><br>
+					<button class="btn btn-block btn-default" onclick="capturePhoto()">Take Picture</button><br>
+					<!-- IMAGE -->
+					<center><img style="display:none;width:80%;height:50%;" id="smallImage" src="" /></center>
+					<center><img style="display:none; width:80%;height:50%;" id="largeImage" src="" /></center>
+					<br>
+					<center>
+						<div class="btn-group" role='group'>
+							<button class="btn btn-primary" onclick="submit()">SUBMIT</button>
+							<button class="btn btn-default" onclick="cancel()">CANCEL</button></h4>
+						</div>
+					</center>
+				</div>
+			</div>
+		</div>
+	</div>
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+        <div class="navbar-text">
+			<a href="tagihan.html">
+				<center><span class="glyphicon glyphicon-chevron-left">Back</span></center>
+			</a>
+        </div>
+    </nav>
+	<script src="js/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+</body>	
+</html>

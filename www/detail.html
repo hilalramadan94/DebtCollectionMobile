@@ -1,0 +1,91 @@
+<!-- Copyright (c) 2015 HILAL,RENDI,FANDI Universitas Komputer Indonesia -->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8" http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+    <title>Mobile Collecting</title>
+
+ 	<link rel="stylesheet" href="css/amber.css" />
+ 	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/ionicons.min.css" />
+
+ 	<script type="text/javascript" charset="utf-8" src="js/jquery.min"></script>
+	<script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/cordova-1.9.0.js"></script>
+  	<script type="text/javascript">
+  		var akad = localStorage.akadDetail;
+  		var tempo = localStorage.tempoDetail;
+		$(document).ready(function(){
+		$.ajax(
+		{
+        url     : 'http://192.168.8.100/amber/services/detail.php',
+        //mengirimkan noakad dan tempo ke script detail.php
+        data    : 'noakad='+akad+'&tempo='+tempo, 
+        //Method pengiriman
+        type    : 'POST',
+        //Data yang akan diambil dari script pemroses
+        dataType: 'json',
+        //Respon jika data berhasil dikirim
+		success: function(data, status){
+			$.each(data, function(i,item){ 
+				noakad = item["no_akad"];
+				tgl_kunjungan = item["tgl_kunjungan"];
+				id_pegawai = item["id_pegawai"];
+				bayar = item["bayar"];
+				log_alasan = item["log_alasan"];
+				promise = item["promise"];
+				if(log_alasan == null)
+				{
+					log_alasan = "";
+				}
+				if(promise == null)
+				{
+					promise = "";
+				}
+				$("#data").append("<div class='panel panel-default'><div class='panel panel-heading'><span class='glyphicon glyphicon-file'></span> No AKAD = "+ noakad +"</div><div class='panel panel-body'><p><span class='glyphicon glyphicon-calendar'></span> Tanggal Kunjungan = "+ tgl_kunjungan +"</p><p><span class='glyphicon glyphicon-user'></span> ID Pegawai = "+ id_pegawai +"</p><p><span class='glyphicon glyphicon-usd'></span> Bayar = Rp."+ bayar +"</p><p><span class='glyphicon glyphicon-edit'></span> Alasan = "+ log_alasan +"</p><p><span class='glyphicon glyphicon-calendar'></span> Promise = "+ promise +"</p></div></div>");
+			});
+			$("#data");
+
+		},
+			error: function(){
+		   	alert('Error terjadi');
+			}
+		});
+		});
+
+	function back()
+    {
+      	window.location.href = "tagihan.html";
+		localStorage.removeItem('akadDetail');
+		localStorage.removeItem('tempoDetail');
+    }
+  	</script>
+  </head>
+  
+  <body onload="init();" class="all">
+  	<nav class="navbar navbar-default navbar-fixed-top" style="margin-bottom:0 ;">
+            <div class="navbar-header">
+                <a class="navbar-brand logo"><span class='glyphicon glyphicon-phone'></span> MOBILE COLLECTING</a>
+            </div>
+        </nav>
+	<div class="container">	
+       <form method="POST" class="form-signin" action="pembayaran.html">
+		  <h3 class="text-center" style="color:#3C8DBC"><strong><span class='glyphicon glyphicon-list'></span> Detail Tagihan</strong></h3>
+		  	<div id="data">
+		  	</div>
+		  </form>
+	</div>
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+            <div class="navbar-text">
+                	<a href="#" onclick="back()">
+                	<center><span class="glyphicon glyphicon-chevron-left">Back</span></center>
+            </div>
+        </nav>
+	</body>
+  <script type="text/javascript" charset="utf-8" src="apis/device.js"></script>
+  <script type="text/javascript" charset="utf-8" src="apis/events.js"></script>
+  <script type="text/javascript" charset="utf-8" src="apis/file.js"></script>
+  <script type="text/javascript" charset="utf-8" src="apis/notification.js"></script>
+  <script type="text/javascript" charset="utf-8" src="apis/storage.js"></script>  
+</html>

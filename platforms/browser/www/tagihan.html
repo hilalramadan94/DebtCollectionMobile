@@ -1,0 +1,254 @@
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+    <title>Mobile Collecting</title>
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/ionicons.min.css" />
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/typography.css">
+	<link rel="stylesheet" href="css/default-css.css">
+
+ 	<script type="text/javascript" charset="utf-8" src="js/jquery.min"></script>
+	<script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/cordova-1.9.0.js"></script>
+	<script src="http://maps.google.com/maps/api/js?key=AIzaSyDx8V1DDjhZ89t3iG3zsbpZR3Bezlv5D8s"></script>
+</head>  
+<body class="all">
+	<div class="container">
+		<h3 class="text-center" style="color:#007bff; padding:10px;"><strong><span class='glyphicon glyphicon-list-alt'></span>DETAIL TAGIHAN</strong></h3>
+		<div class="card-body">
+			<!-- Header Tab --> 
+			<ul class="nav nav-pills mb-3" role="tablist" style="font-size:12px;">
+				<li class="nav-item"><a data-toggle="tab" href="#tagihan" class="nav-link" role="tab"  aria-controls="tagihan" aria-selected="false"><b>TAGIHAN</b></a></li>
+				<li class="nav-item"><a data-toggle="tab" href="#history" class="nav-link" role="tab"  aria-controls="history" aria-selected="false"><b>HISTORY</b></a></li>
+				<li class="nav-item"><a data-toggle="tab" href="#location" class="nav-link" role="tab"  aria-controls="location" aria-selected="false"><b>LOCATION</b></a></li>
+			</ul>
+			<!-- Header Content --> 
+			<div class="tab-content mt-3">
+				<div id="tagihan" class="tab-pane fade show active" role="tabpanel" aria-labelledby="tagihan-tab">	
+					<div id="dataTagihan">
+					</div>
+					<h5 class="text-center" style="padding-top:10px;padding-bottom:10px;">Bertemu Debitur ?</h5>
+					<center>
+						<div class="btn-group" role='group'>
+							<button class="btn btn-primary" onclick="bertemu()">YA</button>
+							<button class="btn btn-default" onclick="tidakbertemu()">TIDAK</button>
+						</div>
+					</center>
+				</div>
+	
+				<div id="history" class="tab-pane fade show" role="tabpanel" aria-labelledby="history-tab">
+					<table class="table table-striped table-bordered table-hover">
+						<thead class="text-uppercase bg-primary">
+							<tr>
+								<th class="text-center"><span class='glyphicon glyphicon-calendar'></span>Tgl Kunjungan</th>
+								<th class="text-center"><span class='glyphicon glyphicon-file'></span> Status</th>
+								<th class="text-center"><span class='glyphicon glyphicon-edit'></span>Action</th>
+							</tr>
+						</thead>
+						<tbody id="dataHistory" style="background-color: #fffff7;">
+						</tbody>
+					</table>
+				</div>
+				<div id="location" class="tab-pane fade show" role="tabpanel" aria-labelledby="location-tab">
+					<button class="btn btn-default btn-block" onclick="getLocation()">Lihat Lokasi</button><br />
+					<center><div id="googleMap" style="width: 100%; height: 50%;"></div></center>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+		<div class="navbar-text">
+			<a href="#" onclick="back()">
+				<center><span class="glyphicon glyphicon-chevron-left">Back</span></center>
+			</a>
+		</div>
+    </nav>
+</body>
+<script type="text/javascript" charset="utf-8">
+	//Connection
+	var URLServer = 'http://hilal.site'
+	//var URLServer = 'http://localhost:2531'
+	//Define
+	var noakad = localStorage.akad;
+	var tempo = localStorage.tempo;
+	var lat = 0;
+	var lng = 0;
+	localStorage.setItem('latDebitur',-6.9005487);
+	localStorage.setItem('lngDebitur',107.6346913);
+	
+	$(document).ready(function()
+	{
+		$.ajax(
+		{
+			//url     : 'http://192.168.8.100/amber/services/debitur.php',
+			url     : URLServer+'/api/bills',
+			//mengirimkan noakad ke script debitur.php
+			data    : 'id='+noakad,
+			//Method pengiriman
+			type    : 'GET',
+			//Data yang akan diambil dari script pemroses
+			dataType: 'json',
+			//Respon jika data berhasil dikirim
+			success: function(data, status)
+			{
+				noakad = data.DebtId;
+				nama = data.Debt.Name;
+				bulan = data.DueDate;               
+				tempo = data.DueDate;
+				pokok = parseInt(data.PrincipalBill);
+				marjin = parseInt(data.Margin);
+				fee = parseInt(data.Fee);
+				denda = parseInt(data.Penalty);
+				total = pokok+marjin+fee+denda;
+				$("#dataTagihan").append("<ul class='list-group'><li class='list-group-item'><span class='glyphicon glyphicon-user'></span> Nama = "+ 
+					nama +"</li><li class='list-group-item'><span class='glyphicon glyphicon-file'></span> No AKAD = "+ 
+					noakad +"</li><li class='list-group-item'><span class='glyphicon glyphicon-calendar'></span> Bulan = "+ 
+					FormatDate(bulan) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-calendar'></span> Jatuh Tempo = "+ 
+					FormatDate(tempo) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-usd'></span> Tagihan Pokok = "+ 
+					FormatMoney(pokok) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-usd'></span> Marjin = "+ 
+					FormatMoney(marjin) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-usd'></span> Administrasi = "+ 
+					FormatMoney(fee) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-usd'></span> Denda = "+ 
+					FormatMoney(denda) +"</li><li class='list-group-item'><span class='glyphicon glyphicon-usd'></span> Total Tagihan = "+
+					FormatMoney(total) +"</ul>");
+				//Location
+				lat = data.GeoLat;
+				lng = data.GeoLng;
+				if (lat != 0 && lng != 0){
+					localStorage.setItem('latDebitur',lat);
+					localStorage.setItem('lngDebitur',lng);
+				}
+			},
+			error: function()
+			{
+				alert('Error terjadi');
+			}
+		});
+	
+		$.ajax(
+		{
+			//url     : 'http://192.168.8.100/amber/services/history.php',
+			url     : URLServer+'/api/homevisits/GetVisistedTasks',
+			//mengirimkan noakad ke script history.php
+			data    : 'confirmation=null&debtId=null', 
+			//Method pengiriman
+			type    : 'GET',
+			//Data yang akan diambil dari script pemroses
+			dataType: 'json',
+			//Respon jika data berhasil dikirim
+			success: function(data, status){
+				$.each(data, function(i,item){ 
+					noakad = item["Id"];
+					tgl_kunjungan = item["HomeVisitDate"];
+					bayar = item["AmountPaid"];
+					jatuh_tempo = item["DueDate"];
+					var status;
+					if(bayar == 0)
+					{
+						status = 'Gagal';
+					}else
+					{
+						status = 'Berhasil'
+					}
+
+					if(status=='Gagal')
+					{
+						detail = "<input hidden value="+
+							jatuh_tempo+" id=jatuh_tempo"+i+"><button class='btn btn-info' value="+
+							noakad+" id=noakad"+i+" onclick='history("+i+")'>Detail <span class='glyphicon glyphicon-log-in'></span> ";
+						$("#dataHistory").append("<tr class='danger'><td>"+ 
+							FormatDate(tgl_kunjungan) + "</td><td>" + 
+							status + "</td><td><center>"+ 
+							detail  +"</center></td></tr>");
+					} else
+					{
+						detail = "<input hidden value="+
+							jatuh_tempo+" id=jatuh_tempo"+i+"><button class='btn btn-info' value="+
+							noakad+" id=noakad"+i+" onclick='history("+i+")'>Detail <span class='glyphicon glyphicon-log-in'></span> ";
+						$("#dataHistory").append("<tr class='success'><td>"+ 
+						FormatDate(tgl_kunjungan) + "</td><td>" + 
+						status + "</td><td><center>"+ 
+						+"</center></td></tr>");
+					}
+					});
+					$("#dataHistory");
+				},
+			error: function()
+			{
+				alert('Error terjadixx');
+			}
+		});
+	});
+	
+	//Formating Date
+	function FormatDate(input) {
+		var d = new Date(input),
+			month = '' + (d.getMonth() + 1),
+			day = '' + d.getDate(),
+			year = d.getFullYear();
+	
+		if (month.length < 2) month = '0' + month;
+		if (day.length < 2) day = '0' + day;
+	
+		return [day,month,year].join('/');
+	};
+	
+	//Formating Money
+	function FormatMoney(input){
+		return  "Rp. "+input.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+	};
+	
+	//Arahkan ke halaman detail.html
+	function history(i)
+  	{
+        var akadDetail = $('#noakad'+i+'').val();
+        var tempoDetail = $('#jatuh_tempo'+i+'').val();
+        localStorage.setItem('akadDetail',akadDetail);
+        localStorage.setItem('tempoDetail',tempoDetail);
+        window.location.href = "detail.html";
+    };
+
+	function bertemu()
+	{
+		window.location.href = "pembayaran.html";
+	};
+
+	function tidakbertemu()
+	{
+		window.location.href = "tidakbertemu.html";
+	};
+
+	function back()
+    {
+    	window.location.href = "task.html";
+		localStorage.removeItem('akad');
+		localStorage.removeItem('tempo');
+		localStorage.removeItem('latDebitur');
+		localStorage.removeItem('lngDebitur');
+    };
+
+	function initialize()
+	{
+		var myCenter=new google.maps.LatLng(localStorage.latDebitur,localStorage.lngDebitur);
+		var mapProp = {
+		center:myCenter,
+		zoom:15,
+		mapTypeId:google.maps.MapTypeId.ROADMAP
+		};
+
+		var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+		var marker=new google.maps.Marker({
+		position:myCenter,
+		});
+		marker.setMap(map);
+	};
+
+	function getLocation()
+	{
+		initialize();
+	};
+</script>
+</html>

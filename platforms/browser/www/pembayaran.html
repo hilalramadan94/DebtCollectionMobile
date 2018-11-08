@@ -1,0 +1,294 @@
+<html>
+<head>
+	<meta charset="utf-8" http-equiv="Content-type" name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+    <title>Mobile Collecting</title>
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/ionicons.min.css" />
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/typography.css">
+	<link rel="stylesheet" href="css/default-css.css">
+ 	<link rel="stylesheet" href="lib/datepicker/dist/css/bootstrap-datepicker.min.css" />
+
+ 	<script type="text/javascript" charset="utf-8" src="js/jquery.min"></script>
+	<script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/cordova-1.9.0.js"></script>
+	<script type="text/javascript" charset="utf-8" src="lib/datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+  	<script type="text/javascript" charset="utf-8">
+	var noakad = localStorage.akad;
+    var tempo = localStorage.tempo;
+    var pictureSource;   // picture source
+    var destinationType; // sets the format of returned value
+	  
+	document.addEventListener("deviceready", onDeviceReady, false);
+
+    // device APIs are available
+    //
+    function onDeviceReady() {
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+		pictureSource=navigator.camera.PictureSourceType;
+        destinationType=navigator.camera.DestinationType;
+    }
+
+    // onSuccess Geolocation
+    //
+    function onSuccess(pos) {
+        localStorage.setItem('lat',pos.coords.latitude); 
+        localStorage.setItem('lng',pos.coords.longitude);
+    }
+     // onError Callback receives a PositionError object
+     //
+    function onError(error) {
+            console.log("Error getting geolocation: code=" + error.code + " message=" + error.message);
+    }
+
+	function onPhotoDataSuccess(imageData) 
+	{
+		var smallImage = document.getElementById('smallImage');
+		smallImage.style.display = 'block';
+		smallImage.src = "data:image/jpeg;base64," + imageData;
+		document.getElementById("smallImage").innerHTML = imageData;
+
+		var largeImage = document.getElementById('smallImage');
+		largeImage.style.display = 'block';
+		largeImage.src = imageData;
+		
+		console.log(imageData);
+		localStorage.setItem('url',imageData);
+    }
+		
+    function capturePhoto() 
+	{
+		navigator.camera.getPicture(onPhotoDataSuccess, onFail, 
+			{ 
+				quality: 50,
+				destinationType: destinationType.FILE_URI,
+				saveToPhotoAlbum : true,
+			});		
+    }
+
+    function onFail(message) {
+      alert('Failed because: ' + message);
+    }
+	
+	  function tidakbayar()
+	  {
+	  	var lat = localStorage.lat;
+	  	var lng = localStorage.lng;
+	    //Mengambil value dari alasan dan promise
+	    var alasan = $('#alasan').val();
+	    var promise = $('#promise').val();
+	    //Gunakan jquery AJAX
+	    $.ajax({
+	        url     : 'http://192.168.8.100/amber/services/tidakbayar.php',
+	        //mengirimkan alasan promise tempo ke tidakbayar.php
+	        data    : 'alasan='+alasan+'&noakad='+noakad+'&tempo='+tempo+'&promise='+promise+'&lat='+lat+'&lng='+lng, 
+	        //Method pengiriman
+	        type    : 'POST',
+	        //Data yang akan diambil dari script pemroses
+	        dataType: 'html',
+	        //Respon jika data berhasil dikirim
+	        success : function(data){
+	            if(data=='success'){
+	                //Arahkan ke halaman task.html jika script pemroses mencetak kata success
+	                localStorage.removeItem('akad');
+	                localStorage.removeItem('tempo');
+	                localStorage.removeItem('lat');
+	                localStorage.removeItem('lng');
+	                alert('Berhasil');
+	                window.location.href="task.html";
+	           
+	            }
+	            else{
+	                //Cetak peringatan lalu arahkan ke pembayaran.html
+	                alert("gagal");
+	                window.location.href = "pembayaran.html";
+	            }
+	        },
+	    });
+	  }
+
+	  function bayar()
+	  {
+	  	var lat = localStorage.lat;
+	  	var lng = localStorage.lng;
+	    //Mengambil value dari jumlahbayar dan note
+	    var jumlah = $('#jumlah').val();
+	    var note = $('#note').val().trim();
+		alert("start bayar");
+		alert("lat:"+lat+" lng:"+ lng);
+		alert("jumlah:"+jumlah+" note:"+note);
+	    //Gunakan jquery AJAX
+	    $.ajax({
+	        url     : 'http://192.168.8.100/amber/services/bayar.php',
+	        //mengirimkan username dan password ke script bayar.php
+	        data    : 'note='+note+'&jumlah='+jumlah+'&noakad='+noakad+'&tempo='+tempo+'&lat='+lat+'&lng='+lng, 
+	        //Method pengiriman
+	        type    : 'POST',
+	        //Data yang akan diambil dari script pemroses
+	        dataType: 'html',
+	        //Respon jika data berhasil dikirim
+	        success : function(data){
+	            if(data=='success'){
+	                //Arahkan ke halaman task.html jika script pemroses mencetak kata success
+	                localStorage.removeItem('akad');
+	                localStorage.removeItem('tempo');
+	                localStorage.removeItem('lat');
+	                localStorage.removeItem('lng');
+	                alert('Berhasil');
+	                window.location.href="task.html";
+	           
+	            }
+	            else{
+	                //Cetak peringatan lalu arahkan ke pembayaran.html
+	                alert("gagal");
+	                window.location.href = "pembayaran.html";
+	            }
+	        },
+	    });
+		alert("done bayar");
+	  }
+
+	  function uploadPhoto() {
+alert("start upload");
+			var dt = new Date();
+			var year = dt.getFullYear();
+			var month = ((dt.getMonth() + 1) < 10 ? '0' : '') + (dt.getMonth() + 1);
+			var date = (dt.getDate() < 10 ? '0' : '') + dt.getDate();
+			var tanggal = year+'-'+month+'-'+date;
+
+alert("localstorage.url"+localStorage.url);
+			var imageURI = localStorage.url;
+		    var options = new FileUploadOptions();
+            options.fileKey="file";
+            options.fileName= noakad+'_'+tanggal+'.jpg';
+            options.mimeType="image/jpeg";
+ 
+            var params = new Object();
+            params.value1 = "test";
+            params.value2 = "param";
+ 
+            options.params = params;
+            options.chunkedMode = false;
+ 
+            var ft = new FileTransfer();
+            ft.upload(imageURI, "http://192.168.8.100/amber/services/upload.php", win, fail, options);
+alert("done upload");
+        }
+        
+		function win(r) {
+            console.log("Code = " + r.responseCode);
+            console.log("Response = " + r.response);
+            console.log("Sent = " + r.bytesSent);
+        }
+
+        function fail(error) {
+            alert("An error has occurred: Code = " + error.code);
+            console.log("upload error source " + error.source);
+            console.log("upload error target " + error.target);
+        }
+
+
+        function submitBayar()
+        {
+        	uploadPhoto();
+        	bayar();
+      		localStorage.removeItem('latDebitur');
+      		localStorage.removeItem('lngDebitur');
+      		localStorage.removeItem('url');
+        }
+
+        function submitTidakBayar()
+        {
+        	uploadPhoto();
+        	tidakbayar();
+      		localStorage.removeItem('latDebitur');
+      		localStorage.removeItem('lngDebitur');
+      		localStorage.removeItem('url');
+        }
+
+	  function cancel()
+	  {
+	  	window.location.href = "tagihan.html";
+	  }
+</script>
+</head>
+<body class="all">
+	<div class="container">	
+		<h3 class="text-center" style="color:#007bff; padding:10px;"><strong><span class='glyphicon glyphicon-list-alt'></span>PEMBAYARAN</strong></h3>
+		<div class="card-body">
+			<!-- Header Tab --> 
+			<ul class="nav nav-pills mb-3" role="tablist" style="font-size:12px;">
+				<li class="nav-item"><a data-toggle="tab" href="#bayar" class="nav-link" role="tab"  aria-controls="tagihan" aria-selected="false"><b>BAYAR</b></a></li>
+				<li class="nav-item"><a data-toggle="tab" href="#tidakbayar" class="nav-link" role="tab"  aria-controls="history" aria-selected="false"><b>TIDAK BAYAR</b></a></li>
+			</ul>
+			<!-- Header Content --> 
+			<div class="tab-content mt-3">
+				<!-- Tab 1 --> 
+				<div id="bayar" class="tab-pane fade show active">
+					<p>JUMLAH BAYAR : <input type="text" class="form-control" id="jumlah"></p>
+					<p>NOTE :</p>
+					<textarea class="form-control" rows="5" id="note"></textarea><br>
+					<button class="btn btn-block btn-default" onclick="capturePhoto()">Take Picture</button><br>
+					<center><img style="display:none;width:50%;height:50%;" id="smallImage" src="" /></center>
+					<div>
+						<span id="capture-result"></span><br/>
+						<span id="format-data"></span><br/>
+					</div>
+					<center>
+						<div class="btn-group" role='group'>
+							<button class="btn btn-primary" onclick="submitBayar()">BAYAR</button>
+							<button class="btn btn-default" onclick="cancel()">CANCEL</button></h4>
+						</div>
+					</center>
+				</div>
+				<!-- Tab 2 --> 
+				<div id="tidakbayar" class="tab-pane fade show">
+					<p>ALASAN :</p>
+					<textarea class="form-control" rows="5" id="alasan"></textarea><br>
+					<p>PROMISE DATE : </p>
+					<div class="form-group">
+						<div class='input-group date' id='datetimepicker1'>
+							<input type='text' class="form-control" id="promise"/>
+							<span class="input-group-addon">
+								<span class="glyphicon glyphicon-calendar"></span>
+							</span>
+						</div>
+					</div>
+					<button class="btn btn-block btn-default" onclick="capturePhoto();">Take Picture</button><br>
+					<center><img style="display:none;width:50%;height:50%;" id="smallImage" src="" /></center>
+					<div>
+						<span id="capture-result"></span><br/>
+						<span id="format-data"></span><br/>
+					</div>
+					<center>
+					<div class="btn-group" role='group'>
+						<button class="btn btn-primary" onclick="submitTidakBayar()">SUBMIT</button>
+						<button class="btn btn-default" onclick="cancel()">CANCEL</button></h4>
+					</div>
+					</center>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+		<div class="navbar-text">
+			<a href="#" onclick="back()">
+				<center><span class="glyphicon glyphicon-chevron-left">Back</span></center>
+			</a>
+		</div>
+    </nav>
+	
+</body>
+<script type="text/javascript">
+	  $(function () {
+	    $('#datetimepicker1').datepicker({
+	      viewMode: 'month',
+	      format : 'yyyy-mm-dd'
+	    });
+	  });
+</script>
+</html>
